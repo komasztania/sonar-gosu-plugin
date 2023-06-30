@@ -17,27 +17,24 @@
 package de.friday.sonarqube.gosu.plugin.rules.smells;
 
 import de.friday.sonarqube.gosu.antlr.GosuParser;
-import de.friday.sonarqube.gosu.plugin.rules.BaseGosuRule;
 import de.friday.sonarqube.gosu.plugin.issues.GosuIssue;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
+import de.friday.sonarqube.gosu.plugin.rules.BaseGosuRule;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.sonar.check.Rule;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Rule(key = UnnecessaryImportRule.KEY)
 public class UnnecessaryImportRule extends BaseGosuRule {
 
     static final String KEY = "UnnecessaryImportRule";
 
-    private final Set<String> allImports = new HashSet<>();
+    private final Map<String, GosuParser.UsesStatementContext> allImports = new HashMap<>();
     private final Set<String> allReferencedClasses = new HashSet<>();
     private String currentPackage;
     private boolean afterUsesStatements = false;
-    private GosuParser.UsesStatementListContext usesStatementContext;
 
     @Override
     protected String getKey() {
@@ -54,7 +51,8 @@ public class UnnecessaryImportRule extends BaseGosuRule {
         if (isNamespaceAvailable(context)) {
             final String usesStatement = context.namespace().getText();
             checkUnnecessaryImport(usesStatement, context);
-            allImports.add(usesStatement);
+            String className = getClassName(usesStatement);
+            allImports.putIfAbsent(className, context);
         }
     }
 
@@ -74,7 +72,6 @@ public class UnnecessaryImportRule extends BaseGosuRule {
 
     @Override
     public void exitUsesStatementList(GosuParser.UsesStatementListContext ctx) {
-        usesStatementContext = ctx;
         afterUsesStatements = true;
     }
 
@@ -89,14 +86,11 @@ public class UnnecessaryImportRule extends BaseGosuRule {
 
     @Override
     public void exitStart(GosuParser.StartContext ctx) {
-        final Set<String> allImportedClasses = allImports.stream()
-                .map(this::getClassName)
-                .collect(Collectors.toSet());
-
-        allImportedClasses.removeAll(allReferencedClasses);
-        allImportedClasses.forEach(unusedImport ->
-                addIssueWithMessage("There is unused import of " + unusedImport + ".", usesStatementContext)
-        );
+        allImports.entrySet()
+                .stream()
+                .filter(elem -> !allReferencedClasses.contains(elem.getKey()))
+                .forEach(elem -> addIssueWithMessage("There is unused import of " + elem.getKey() + ".",
+                        elem.getValue()));
     }
 
     private void checkUnnecessaryImport(String usesStatement, GosuParser.UsesStatementContext ctx) {
@@ -130,7 +124,7 @@ public class UnnecessaryImportRule extends BaseGosuRule {
     }
 
     private void checkDuplicateImport(String usesStatement, GosuParser.UsesStatementContext ctx) {
-        if (allImports.contains(usesStatement)) {
+        if (allImports.containsKey(getClassName(usesStatement))) {
             addIssueWithMessage("Unnecessary import, it is a duplicate.", ctx);
         }
     }

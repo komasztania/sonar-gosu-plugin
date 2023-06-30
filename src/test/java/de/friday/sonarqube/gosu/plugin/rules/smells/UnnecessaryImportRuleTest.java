@@ -45,16 +45,16 @@ class UnnecessaryImportRuleTest {
                         GosuIssueLocations.of(
                                 // java.lang
                                 Arrays.asList(4, 6, 4, 22),
-                                // typekey
+                                // gw typekey
                                 Arrays.asList(5, 6, 5, 27),
-                                // entity
+                                // gw entity
                                 Arrays.asList(6, 6, 6, 18),
-                                // same package
+                                // same package used
                                 Arrays.asList(7, 6, 7, 23),
-                                // duplicated import
+                                // duplicated imports
                                 Arrays.asList(10, 6, 10, 37),
                                 // unused imports
-                                Arrays.asList(3, 1, 10, 37)
+                                Arrays.asList(8, 6, 8, 32)
                         )
                 );
     }
@@ -92,8 +92,8 @@ class UnnecessaryImportRuleTest {
                 .hasSizeEqualTo(2)
                 .areLocatedOn(
                         GosuIssueLocations.of(
-                                Arrays.asList(3, 6, 3, 26),
-                                Arrays.asList(6, 6, 6, 25)
+                                Arrays.asList(6, 6, 6, 25),
+                                Arrays.asList(3, 6, 3, 26)
                         )
                 );
     }
