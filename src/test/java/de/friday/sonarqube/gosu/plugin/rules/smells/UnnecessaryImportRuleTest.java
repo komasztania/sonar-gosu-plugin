@@ -38,7 +38,25 @@ class UnnecessaryImportRuleTest {
     void findsIssuesWhenUnnecessaryImportIsFound() {
         given("UnnecessaryImportRule/nok.gs")
                 .whenCheckedAgainst(UnnecessaryImportRule.class)
-                .then().issuesFound().hasSizeEqualTo(6);
+                .then()
+                .issuesFound()
+                .hasSizeEqualTo(6)
+                .areLocatedOn(
+                        GosuIssueLocations.of(
+                                // java.lang
+                                Arrays.asList(4, 6, 4, 22),
+                                // typekey
+                                Arrays.asList(5, 6, 5, 27),
+                                // entity
+                                Arrays.asList(6, 6, 6, 18),
+                                // same package
+                                Arrays.asList(7, 6, 7, 23),
+                                // duplicated import
+                                Arrays.asList(10, 6, 10, 37),
+                                // unused imports
+                                Arrays.asList(3, 1, 10, 37)
+                        )
+                );
     }
 
     @Test
